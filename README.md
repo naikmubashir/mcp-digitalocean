@@ -21,8 +21,17 @@ npm --version
 ## Quick Test
 
 To verify the MCP server works correctly, you can test it directly from the command line:
+
+**Without API Token (server will start but API calls will fail):**
+
 ```bash
 npx @digitalocean/mcp --services apps
+```
+
+**With API Token (full functionality):**
+
+```bash
+DIGITALOCEAN_API_TOKEN=your_token_here npx @digitalocean/mcp --services apps
 ```
 
 ## Installation
@@ -38,6 +47,7 @@ claude mcp add digitalocean-mcp \
 ```
 
 This will:
+
 - Add the MCP server under the default (local) scope — meaning it's only available inside the current folder.
 - Register it with the name `digitalocean-mcp`.
 - Enable the `apps` and `databases` services.
@@ -45,19 +55,25 @@ This will:
 - Store the configuration in your global Claude config at `~/.claude.json`, scoped to the current folder.
 
 #### Verify Installation
+
 To confirm it's been added:
+
 ```bash
 claude mcp list
 ```
 
 #### Inspect Details
+
 To inspect details:
+
 ```bash
 claude mcp get digitalocean-mcp
 ```
 
 #### Remove Server
+
 To remove it:
+
 ```bash
 claude mcp remove digitalocean-mcp
 ```
@@ -93,11 +109,13 @@ claude mcp add -s user digitalocean-mcp-user-scope \
 ```
 
 This will:
+
 - Make the server available in all folders, not just the one you're in
 - Scope it to your user account
 - Store it in your global Claude config at `~/.claude.json`
 
 To remove it:
+
 ```bash
 claude mcp remove -s user digitalocean-mcp-user-scope
 ```
@@ -134,6 +152,7 @@ Add the following to your Cursor settings file located at `~/.cursor/config.json
 #### Debugging in Cursor
 
 To check MCP server logs and debug issues:
+
 1. Open the Command Palette (⌘+Shift+P on Mac or Ctrl+Shift+P on Windows/Linux)
 2. Type "Developer: Toggle Developer Tools" and press Enter
 3. Navigate to the Console tab to view MCP server logs
@@ -178,6 +197,7 @@ Add the following to your VS Code MCP configuration file:
 #### Viewing Available Tools
 
 To see what tools are available from the MCP server:
+
 1. Open the Command Palette (⌘+Shift+P on Mac or Ctrl+Shift+P on Windows/Linux)
 2. Select "Agent" mode in the chatbox, 
 3. Click "Configure tools" on the right, and check for digitalocean related tools under `MCP Server: mcpDigitalocean`. You should be able to list available tools like `app-create`, `app-list`, `app-delete`, etc.
@@ -185,10 +205,11 @@ To see what tools are available from the MCP server:
 #### Debugging in VS Code
 
 To troubleshoot MCP connections:
+
 1. Open the Command Palette (⌘+Shift+P on Mac or Ctrl+Shift+P on Windows/Linux)
 2. Type "Developer: Toggle Developer Tools" and press Enter
 3. Navigate to the Console tab to view MCP server logs
-3. Check for connection status and error messages
+4. Check for connection status and error messages
 
 If you are getting an 401 error or authentication related errors, it is likely due to misconfiguring your access token.
 
@@ -200,6 +221,44 @@ enable the services you need to reduce context size and improve accuracy. See li
 ```bash
 npx @digitalocean/mcp --services apps,droplets
 ```
+
+### API Token Configuration
+
+The DigitalOcean API token is **optional** at server startup. The MCP server will:
+
+- **Start successfully** without a token, showing a warning message
+- **Provide helpful error messages** when tools are called without a valid token
+- **Work normally** when a valid token is provided
+
+**Methods to provide your API token:**
+
+1. **Environment variable:**
+
+   ```bash
+   export DIGITALOCEAN_API_TOKEN=your_token_here
+   npx @digitalocean/mcp --services apps
+   ```
+
+2. **Command line flag:**
+
+   ```bash
+   npx @digitalocean/mcp --digitalocean-api-token your_token_here --services apps
+   ```
+
+3. **MCP configuration (recommended for IDE integration):**
+   ```json
+   {
+     "env": {
+       "DIGITALOCEAN_API_TOKEN": "your_token_here"
+     }
+   }
+   ```
+
+**When is the token required?**
+
+- The token is only needed when making actual API calls to DigitalOcean
+- Without a token, you'll receive clear error messages explaining how to configure it
+- This allows the server to load in development environments or CI/CD pipelines without failing
 
 ## Supported Services
 
