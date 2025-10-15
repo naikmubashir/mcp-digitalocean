@@ -46,10 +46,6 @@ func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: level}))
 	token := *tokenFlag
-	if token == "" {
-		logger.Error("DigitalOcean API token not provided. Use --digitalocean-api-token flag or set DIGITALOCEAN_API_TOKEN environment variable")
-		os.Exit(1)
-	}
 
 	endpoint := *endpointFlag
 	if endpoint == "" {
@@ -61,7 +57,17 @@ func main() {
 		services = strings.Split(*serviceFlag, ",")
 	}
 
-	client, err := newGodoClientWithTokenAndEndpoint(context.Background(), token, endpoint)
+	// Create client - if no token provided, create a client that will fail on API calls
+	var client *godo.Client
+	var err error
+	if token == "" {
+		logger.Warn("DigitalOcean API token not provided. Server will start but API calls will fail until token is available. Use --digitalocean-api-token flag or set DIGITALOCEAN_API_TOKEN environment variable")
+		// Create a client with empty token - this will allow server to start but API calls will fail
+		client, err = newGodoClientWithTokenAndEndpoint(context.Background(), "", endpoint)
+	} else {
+		client, err = newGodoClientWithTokenAndEndpoint(context.Background(), token, endpoint)
+	}
+	
 	if err != nil {
 		logger.Error("Failed to create DigitalOcean client: " + err.Error())
 		os.Exit(1)
@@ -91,6 +97,8 @@ func main() {
 // newGodoClientWithTokenAndEndpoint initializes a new godo client with a custom user agent and endpoint.
 func newGodoClientWithTokenAndEndpoint(ctx context.Context, token string, endpoint string) (*godo.Client, error) {
 	cleanToken := strings.Trim(strings.TrimSpace(token), "'")
+	
+	// Create oauth client - even with empty token to allow server startup
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cleanToken})
 	oauthClient := oauth2.NewClient(ctx, ts)
 
